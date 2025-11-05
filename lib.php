@@ -114,6 +114,16 @@ function local_alternatename_core_user_get_fullname(\stdClass $user) {
 function local_alternatename_render_from_template(string $template, \stdClass $user): string {
     $display = $template;
 
+    // Remove the structure (firstname lastname) if alternatename is empty.
+    // In a template of the form "alternatename (firstname lastname)", if alternatename is empty, delete the entire
+    // construction along with the brackets.
+    // In a template of the form "alternatename;firstname lastname", if alternatename is empty, remove just
+    // alternatename and the separator ';'.
+    if (empty(trim($user->alternatename ?? ''))) {
+        $display = preg_replace('/\{\s*alternatename\s*\}\s*[\(\[\{][^\)\]\}]+[\)\]\}]/u', '', $display);
+        $display = preg_replace('/\{\s*alternatename\s*\}\s*;\s*/u', '', $display);
+    }
+
     // Find all placeholders in the form {placeholder}.
     preg_match_all('/\{([a-zA-Z0-9_]+)\}/', $display, $matches, PREG_SET_ORDER);
 
@@ -139,6 +149,11 @@ function local_alternatename_render_from_template(string $template, \stdClass $u
         }
     }
 
+    // Remove any brackets that do not contain letters, numbers, or Unicode characters (left over from deleted placeholders).
+    $display = preg_replace('/\(\s*[^\pL\d]+\s*\)/u', '', $display);
+    $display = preg_replace('/\[\s*[^\pL\d]+\s*\]/u', '', $display);
+    $display = preg_replace('/\{\s*[^\pL\d]+\s*\}/u', '', $display);
+
     // Remove empty parentheses and surrounding spaces if there are no characters inside.
     $display = preg_replace('/\(\s*\)/u', '', $display);
     $display = preg_replace('/\[\s*\]/u', '', $display);
@@ -162,6 +177,10 @@ function local_alternatename_render_from_template(string $template, \stdClass $u
     // Remove spaces after opening brackets and before closing brackets.
     $display = preg_replace('/([\(\[\{])\s+/', '$1', $display);
     $display = preg_replace('/\s+([\)\]\}])/', '$1', $display);
+
+    // Remove repeated spaces and trim again after bracket cleanup.
+    $display = preg_replace('/\s{2,}/u', ' ', $display);
+    $display = trim($display);
 
     // Trim the final string.
     $display = trim($display);
