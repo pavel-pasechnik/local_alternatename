@@ -52,10 +52,6 @@ function local_alternatename_core_user_get_fullname(\stdClass $user) {
 
     $user = clone($user);
 
-    if (!isset($user->firstname) && !isset($user->lastname)) {
-        return '';
-    }
-
     if (!$override) {
         if (!empty($CFG->forcefirstname)) {
             $user->firstname = $CFG->forcefirstname;
@@ -83,6 +79,30 @@ function local_alternatename_core_user_get_fullname(\stdClass $user) {
         $templates = [$format];
     }
 
+    // Check whether at least one placeholder referenced in the templates has data.
+    $placeholderfields = [];
+    foreach ($templates as $template) {
+        $matches = [];
+        if (preg_match_all('/\{([a-zA-Z0-9_]+)\}/', $template, $matches)) {
+            foreach ($matches[1] as $fieldname) {
+                $placeholderfields[$fieldname] = true;
+            }
+        }
+    }
+    if (!empty($placeholderfields)) {
+        $hasplaceholdervalue = false;
+        foreach (array_keys($placeholderfields) as $fieldname) {
+            $fieldvalue = $user->$fieldname ?? null;
+            if ($fieldvalue !== null && trim((string)$fieldvalue) !== '') {
+                $hasplaceholdervalue = true;
+                break;
+            }
+        }
+        if (!$hasplaceholdervalue) {
+            return '';
+        }
+    }
+
     foreach ($templates as $template) {
         $display = local_alternatename_render_from_template($template, $user);
         if ($display !== '') {
@@ -90,7 +110,22 @@ function local_alternatename_core_user_get_fullname(\stdClass $user) {
         }
     }
 
-    $fallback = trim(($user->firstname ?? '') . ' ' . ($user->lastname ?? ''));
+    $fallback = '';
+    if (!empty($placeholderfields)) {
+        foreach (array_keys($placeholderfields) as $fieldname) {
+            $candidate = trim((string)($user->$fieldname ?? ''));
+            if ($candidate !== '') {
+                if ($fallback === '') {
+                    $fallback = $candidate;
+                } else {
+                    $fallback .= ' ' . $candidate;
+                }
+            }
+        }
+    }
+    if ($fallback === '') {
+        $fallback = trim(($user->firstname ?? '') . ' ' . ($user->lastname ?? ''));
+    }
     if ($fallback !== '') {
         return $fallback;
     }
@@ -114,9 +149,22 @@ function local_alternatename_core_user_get_fullname(\stdClass $user) {
 function local_alternatename_render_from_template(string $template, \stdClass $user): string {
     $display = $template;
 
-    // If alternatename is empty, delete the entire structure in brackets following it.
-    if (empty(trim($user->alternatename ?? ''))) {
-        $display = preg_replace('/\{\s*alternatename\s*\}\s*[\(\[\{][^\)\]\}]*[\)\]\}]/u', '', $display);
+    // Remove separators and surrounding characters if the first placeholder is empty.
+    // If the first placeholder is empty, remove the characters, quotation marks, and brackets
+    // that separate it from the subsequent ones.
+    preg_match('/^\s*\{([a-zA-Z0-9_]+)\}/', $template, $firstmatch);
+    if ($firstmatch) {
+        $firstfield = $firstmatch[1];
+        $firstvalue = isset($user->$firstfield) ? trim((string)$user->$firstfield) : '';
+        if ($firstvalue === '') {
+            // Remove the punctuation directly after the first placeholder, along with paired closing symbols later.
+            $firstplaceholderpattern = '/^\s*\{\s*'
+                . preg_quote($firstfield, '/')
+                . '\s*\}[\s\p{P}\p{S}"\'«»\(\[\{]+/u';
+            $display = preg_replace($firstplaceholderpattern, '', $display);
+            // Remove paired closing symbols if there are no letters or numbers after them.
+            $display = preg_replace('/["\'»\)\]\}]+\s*$/u', '', $display);
+        }
     }
 
     // Find all placeholders in the form {placeholder}.
@@ -144,6 +192,13 @@ function local_alternatename_render_from_template(string $template, \stdClass $u
         }
     }
 
+    // If no placeholders remain near quotes, brackets, or punctuation, remove the surrounding or separating characters.
+    if (!preg_match('/\{[a-zA-Z0-9_]+\}/', $display)) {
+        $display = preg_replace('/["\'«»\(\[\{].*?["\'»\)\]\}]/u', '', $display);
+        // We also remove any punctuation marks that are not followed by any data.
+        $display = preg_replace('/[\p{P}\p{S}]+\s*$/u', '', $display);
+    }
+
     // Remove any brackets that do not contain letters, numbers, or Unicode characters (left over from deleted placeholders).
     $display = preg_replace('/\(\s*[^\pL\d]+\s*\)/u', '', $display);
     $display = preg_replace('/\[\s*[^\pL\d]+\s*\]/u', '', $display);
@@ -153,18 +208,6 @@ function local_alternatename_render_from_template(string $template, \stdClass $u
     $display = preg_replace('/\(\s*\)/u', '', $display);
     $display = preg_replace('/\[\s*\]/u', '', $display);
     $display = preg_replace('/\{\s*\}/u', '', $display);
-    // Remove double brackets with spaces inside if they became empty after removing the placeholder.
-    $display = preg_replace('/\(\s*[^\pL\d]*\s*\)/u', '', $display);
-    $display = preg_replace('/\[\s*[^\pL\d]*\s*\]/u', '', $display);
-    $display = preg_replace('/\{\s*[^\pL\d]*\s*\}/u', '', $display);
-
-    // Remove repeated spaces.
-    $display = preg_replace('/\s{2,}/u', ' ', $display);
-
-    // Remove empty parentheses or brackets.
-    $display = preg_replace('/\(\s*\)/', '', $display);
-    $display = preg_replace('/\[\s*\]/', '', $display);
-    $display = preg_replace('/\{\s*\}/', '', $display);
 
     // Remove spaces before punctuation.
     $display = preg_replace('/\s+([,.;:!?])/', '$1', $display);
@@ -175,9 +218,6 @@ function local_alternatename_render_from_template(string $template, \stdClass $u
 
     // Remove repeated spaces and trim again after bracket cleanup.
     $display = preg_replace('/\s{2,}/u', ' ', $display);
-    $display = trim($display);
-
-    // Trim the final string.
     $display = trim($display);
 
     return $display;

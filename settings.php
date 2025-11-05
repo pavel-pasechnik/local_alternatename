@@ -44,14 +44,16 @@ if ($hassiteconfig) {
         'local_alternatename/fullnamedisplay_template',
         get_string('setting_fullname_label', 'local_alternatename'),
         get_string('setting_fullname_desc', 'local_alternatename', $placeholders),
-        '{firstname} {lastname}'
+        '{firstname} {lastname}',
+        PARAM_RAW_TRIMMED
     ));
 
     $settings->add(new admin_setting_configtext(
         'local_alternatename/alternativefullname_template',
         get_string('setting_alternative_label', 'local_alternatename'),
         get_string('setting_alternative_desc', 'local_alternatename', $placeholders),
-        '{alternatename} ({firstname} {lastname})'
+        '{alternatename} ({firstname} {lastname})',
+        PARAM_RAW_TRIMMED
     ));
 
     $ADMIN->add($categoryname, $settings);

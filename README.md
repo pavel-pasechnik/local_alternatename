@@ -42,13 +42,15 @@
 ## Features
 - Supports all standard Moodle user profile fields as placeholders.  
 - Cleans output by removing empty placeholders and adjacent punctuation.  
+- Intelligent cleanup of brackets, quotes, and punctuation when placeholders are empty.  
 - Compatible with Moodle versions 4.0 through 4.5.
 
 ---
 
 ## Development Notes
 - Main files include `lib.php` and `settings.php`.  
-- Core functionality implemented in `local_alternatename_core_user_get_fullname()` which overrides the default fullname retrieval.
+- Core functionality implemented in `local_alternatename_core_user_get_fullname()` which overrides the default fullname retrieval.  
+- Advanced name rendering logic in `local_alternatename_render_from_template()` handles nested and partial placeholders gracefully.
 
 ---
 
