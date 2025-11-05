@@ -112,32 +112,50 @@ function local_alternatename_core_user_get_fullname(\stdClass $user) {
  * @return string Rendered display string or an empty string if nothing matches.
  */
 function local_alternatename_render_from_template(string $template, \stdClass $user): string {
-    $fields = \core_user\fields::get_name_fields();
     $display = $template;
-    $containsplaceholders = false;
 
-    foreach ($fields as $field) {
-        if (strpos($display, $field) === false) {
-            continue;
-        }
-        $containsplaceholders = true;
+    // Find all placeholders in the form {placeholder}.
+    preg_match_all('/\{([a-zA-Z0-9_]+)\}/', $display, $matches, PREG_SET_ORDER);
+
+    foreach ($matches as $match) {
+        $placeholder = $match[0];
+        $field = $match[1];
         $value = isset($user->$field) ? trim((string)$user->$field) : '';
-        $display = str_replace($field, $value === '' ? 'EMPTY' : $value, $display);
+
+        if ($value !== '') {
+            // Replace placeholder with the value.
+            $display = str_replace($placeholder, $value, $display);
+        } else {
+            // Remove placeholder and surrounding punctuation, brackets and spaces.
+            // Pattern to remove punctuation, brackets and spaces around the placeholder.
+            // We will replace from the placeholder outwards to remove surrounding characters.
+
+            // Escape placeholder for regex.
+            $ph = preg_quote($placeholder, '/');
+
+            // Remove punctuation, brackets, and spaces around the placeholder.
+            // For example: " ( {placeholder} ) ", " - {placeholder},", etc.
+            $display = preg_replace('/[\s\p{P}\p{S}]*' . $ph . '[\s\p{P}\p{S}]*/u', '', $display);
+        }
     }
 
-    if (!$containsplaceholders) {
-        return trim($display);
-    }
+    // Remove repeated spaces.
+    $display = preg_replace('/\s{2,}/u', ' ', $display);
 
-    $patterns = [
-        '/[[:punct:]「」]*EMPTY[[:punct:]「」]*/u',
-        '/\s{2,}/u',
-    ];
-    foreach ($patterns as $pattern) {
-        $display = preg_replace($pattern, ' ', $display);
-    }
+    // Remove empty parentheses or brackets.
+    $display = preg_replace('/\(\s*\)/', '', $display);
+    $display = preg_replace('/\[\s*\]/', '', $display);
+    $display = preg_replace('/\{\s*\}/', '', $display);
 
-    $display = trim(str_replace('EMPTY', '', $display));
+    // Remove spaces before punctuation.
+    $display = preg_replace('/\s+([,.;:!?])/', '$1', $display);
+
+    // Remove spaces after opening brackets and before closing brackets.
+    $display = preg_replace('/([\(\[\{])\s+/', '$1', $display);
+    $display = preg_replace('/\s+([\)\]\}])/', '$1', $display);
+
+    // Trim the final string.
+    $display = trim($display);
 
     return $display;
 }
