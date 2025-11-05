@@ -69,7 +69,7 @@ function local_alternatename_core_user_get_fullname(\stdClass $user) {
     }
 
     if (!isset($format)) {
-        $setting = $override ? 'alternativealternatename' : 'fullnamedisplay';
+        $setting = $override ? 'alternativefullnameformat' : 'fullnamedisplay';
         $format = $CFG->$setting ?? get_config('core', $setting);
     }
 
