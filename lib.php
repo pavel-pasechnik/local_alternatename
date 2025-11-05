@@ -114,7 +114,7 @@ function local_alternatename_core_user_get_fullname(\stdClass $user) {
 function local_alternatename_render_from_template(string $template, \stdClass $user): string {
     $display = $template;
 
-    // Если alternatename пуст, удаляем всю конструкцию в скобках, следующую за ним.
+    // If alternatename is empty, delete the entire structure in brackets following it.
     if (empty(trim($user->alternatename ?? ''))) {
         $display = preg_replace('/\{\s*alternatename\s*\}\s*[\(\[\{][^\)\]\}]*[\)\]\}]/u', '', $display);
     }
