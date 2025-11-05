@@ -139,6 +139,15 @@ function local_alternatename_render_from_template(string $template, \stdClass $u
         }
     }
 
+    // Удаляем пустые скобки и окружающие пробелы, если внутри нет символов.
+    $display = preg_replace('/\(\s*\)/u', '', $display);
+    $display = preg_replace('/\[\s*\]/u', '', $display);
+    $display = preg_replace('/\{\s*\}/u', '', $display);
+    // Удаляем двойные скобки с пробелами внутри, если после удаления плейсхолдера они стали пустыми.
+    $display = preg_replace('/\(\s*[^\pL\d]*\s*\)/u', '', $display);
+    $display = preg_replace('/\[\s*[^\pL\d]*\s*\]/u', '', $display);
+    $display = preg_replace('/\{\s*[^\pL\d]*\s*\}/u', '', $display);
+
     // Remove repeated spaces.
     $display = preg_replace('/\s{2,}/u', ' ', $display);
 
