@@ -122,7 +122,7 @@ function local_alternatename_render_from_template(string $template, \stdClass $u
         $field = $match[1];
         $value = isset($user->$field) ? trim((string)$user->$field) : '';
 
-        if ($value !== '') {
+        if (trim($value) !== '') {
             // Replace placeholder with the value.
             $display = str_replace($placeholder, $value, $display);
         } else {
