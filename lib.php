@@ -139,11 +139,11 @@ function local_alternatename_render_from_template(string $template, \stdClass $u
         }
     }
 
-    // Удаляем пустые скобки и окружающие пробелы, если внутри нет символов.
+    // Remove empty parentheses and surrounding spaces if there are no characters inside.
     $display = preg_replace('/\(\s*\)/u', '', $display);
     $display = preg_replace('/\[\s*\]/u', '', $display);
     $display = preg_replace('/\{\s*\}/u', '', $display);
-    // Удаляем двойные скобки с пробелами внутри, если после удаления плейсхолдера они стали пустыми.
+    // Remove double brackets with spaces inside if they became empty after removing the placeholder.
     $display = preg_replace('/\(\s*[^\pL\d]*\s*\)/u', '', $display);
     $display = preg_replace('/\[\s*[^\pL\d]*\s*\]/u', '', $display);
     $display = preg_replace('/\{\s*[^\pL\d]*\s*\}/u', '', $display);
