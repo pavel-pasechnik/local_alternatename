@@ -1,6 +1,6 @@
 # Full Name Format Plugin: local_alternatename
 
-[![Moodle](https://img.shields.io/badge/Moodle-4.0--4.5-orange?logo=moodle&style=flat-square)](https://moodle.org/plugins/local_alternatename)
+[![Moodle](https://img.shields.io/badge/Moodle--4.5+-orange?logo=moodle&style=flat-square)](https://moodle.org/plugins/local_alternatename)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg?style=flat-square)](https://www.gnu.org/licenses/gpl-3.0)
 [![Latest Release](https://img.shields.io/github/v/release/pavel-pasechnik/local_alternatename?label=Release&style=flat-square)](https://github.com/pavel-pasechnik/local_alternatename/releases/latest)
 [![Coding Style](https://img.shields.io/badge/Coding%20Style-Moodle-blueviolet?style=flat-square)](https://moodledev.io/general/development/policies/codingstyle)

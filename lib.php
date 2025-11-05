@@ -29,23 +29,13 @@
  * rendered result (e.g. 'alternatename;firstname lastname').
  *
  * @param \stdClass $user The user data to render.
+ * @param bool $override Whether to override forced names.
+ * @param array $options Additional options.
  * @return string
  */
-function local_alternatename_core_user_get_fullname(\stdClass $user) {
+function local_alternatename_core_user_get_fullname(\stdClass $user, bool $override = false, array $options = []): string {
     global $CFG, $SESSION;
 
-    $params = func_get_args();
-    array_shift($params); // Drop the $user argument.
-
-    $override = false;
-    $options = [];
-    foreach ($params as $param) {
-        if (is_bool($param)) {
-            $override = $param;
-        } else if (is_array($param)) {
-            $options = $param + $options;
-        }
-    }
     if (isset($options['override'])) {
         $override = (bool)$options['override'];
     }

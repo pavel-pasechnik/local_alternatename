@@ -18,7 +18,7 @@
  * Settings definitions for the local_alternatename plugin.
  *
  * @package   local_alternatename
- * @copyright 2024 Pavel
+ * @copyright 2025 Pavel Pasechnik
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
