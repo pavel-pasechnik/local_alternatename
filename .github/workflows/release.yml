@@ -72,7 +72,7 @@ jobs:
       - name: Prepare ZIP archive
         run: |
           echo "📦 Preparing Moodle plugin package"
-          plugin="local_alternatename"
+          plugin="alternatename"
           staging="$(mktemp -d)"
 
           mkdir -p "$staging/$plugin"
@@ -95,7 +95,7 @@ jobs:
         with:
           tag_name: ${{ env.VERSION }}
           name: "Release ${{ env.VERSION }}"
-          files: local_alternatename.zip
+          files: alternatename.zip
           draft: false
           prerelease: false
         env:
