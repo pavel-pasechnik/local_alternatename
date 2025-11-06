@@ -44,8 +44,7 @@ if ($hassiteconfig) {
         'local_alternatename/fullnamedisplay_template',
         get_string('setting_fullname_label', 'local_alternatename'),
         get_string('setting_fullname_desc', 'local_alternatename', $placeholders),
-        '{firstname} {lastname}',
-        PARAM_RAW_TRIMMED
+        '{firstname} {lastname}'
     ));
 
     $settings->add(new admin_setting_configtext(
