@@ -51,8 +51,7 @@ if ($hassiteconfig) {
         'local_alternatename/alternativefullname_template',
         get_string('setting_alternative_label', 'local_alternatename'),
         get_string('setting_alternative_desc', 'local_alternatename', $placeholders),
-        '{alternatename} ({firstname} {lastname})',
-        PARAM_RAW_TRIMMED
+        '{alternatename} ({firstname} {lastname})'
     ));
 
     $ADMIN->add($categoryname, $settings);
