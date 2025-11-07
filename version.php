@@ -25,6 +25,6 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'local_alternatename';
-$plugin->release   = '1.0.15';
-$plugin->version   = 2025110600;
+$plugin->release   = '1.0.16';
+$plugin->version   = 2025110700;
 $plugin->requires  = 2024041900;
