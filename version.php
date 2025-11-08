@@ -25,7 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'local_alternatename';
-$plugin->release   = '1.0.16';
-$plugin->version   = 2025110700;
+$plugin->release   = '1.0.17';
+$plugin->version   = 2025110800;
 $plugin->requires  = 2024041900;
 $plugin->source = 'https://github.com/pavel-pasechnik/local_alternatename';
