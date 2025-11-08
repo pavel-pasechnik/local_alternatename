@@ -95,7 +95,7 @@ jobs:
         with:
           tag_name: ${{ env.VERSION }}
           name: "Release ${{ env.VERSION }}"
-          files: alternatename.zip
+          files: local_alternatename.zip
           draft: false
           prerelease: false
         env:
