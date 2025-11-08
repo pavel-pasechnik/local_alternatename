@@ -76,11 +76,12 @@ jobs:
       - name: Prepare ZIP archive
         run: |
           echo "📦 Preparing Moodle plugin package"
-          plugin="alternatename"
+          plugindir="alternatename"
+          artifact="local_alternatename"
           staging="$(mktemp -d)"
 
-          mkdir -p "$staging/$plugin"
-          rsync -a ./ "$staging/$plugin"/ \
+          mkdir -p "$staging/$plugindir"
+          rsync -a ./ "$staging/$plugindir"/ \
             --exclude ".git/" \
             --exclude ".github/" \
             --exclude ".idea/" \
@@ -92,7 +93,7 @@ jobs:
             --exclude "*.DS_Store" \
             --exclude "*.history*"
 
-          (cd "$staging" && zip -r "$GITHUB_WORKSPACE/${plugin}.zip" "$plugin")
+          (cd "$staging" && zip -r "$GITHUB_WORKSPACE/${artifact}.zip" "$plugindir")
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
