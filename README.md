@@ -13,28 +13,31 @@
 ---
 
 ## What It Does
-- Allows administrators to configure the display format of user full names in Moodle using customizable templates with placeholders (e.g. `{alternatename} ({firstname} {lastname})`).  
-- Supports all standard profile fields such as `{firstname}`, `{lastname}`, `{alternatename}`, `{middlename}`, `{prefix}`, `{suffix}`, `{username}`, `{email}`, `{idnumber}`, `{fullname}`, and more.  
+- Allows administrators to configure the display format of user full names in Moodle using customizable templates with placeholders (e.g. `alternatename (firstname lastname)`).  
+- Supports all standard profile fields such as `firstname`, `lastname`, `alternatename`, `middlename`, `prefix`, `suffix`, `username`, `email`, `idnumber`, `fullname`, and more.  
 - Automatically removes empty placeholders and surrounding punctuation when rendering the name.
 
 ---
 
 ## Installation
-1. Copy this directory to `local/alternatename` in your Moodle codebase.  
-2. Run the Moodle upgrade (`php admin/cli/upgrade.php`) to install the plugin.
+1. Copy (or symlink) this directory to `local/alternatename` in your Moodle codebase.  
+2. Run the Moodle upgrade script: `php admin/cli/upgrade.php`.  
+3. Purge caches so the overridden fullname callback is picked up: `php admin/cli/purge_caches.php`.
 
 ---
 
 ## Configuration
-- Set name format templates via **Site administration → Users → Accounts → Default preferences** or through the plugin’s settings page.  
-- Templates can be customized per context to control how user names appear throughout the site.
+- The plugin does not add its own settings page. It reuses the core fullname options located at  
+  **Site administration → Users → Accounts → User default preferences** → *Full name format* / *Alternative full name format*.  
+- You can also define `$CFG->fullnamedisplay` and `$CFG->alternativefullnameformat` in `config.php` to enforce templates site-wide.
+- Templates accept the same placeholders you would normally use (e.g. `firstname`, `lastname`, `alternatename`, `username`, `email`).
 
 ---
 
 ## Usage
 - Example templates:  
-  - `{alternatename} ({firstname} {lastname})`  
-  - `{prefix} {firstname} {lastname} {suffix}`  
+  - `alternatename (firstname lastname)`  
+  - `prefix firstname lastname suffix`  
 - Placeholders will be replaced with user profile data, and any empty fields will be omitted cleanly.
 
 ---
@@ -43,13 +46,14 @@
 - Supports all standard Moodle user profile fields as placeholders.  
 - Cleans output by removing empty placeholders and adjacent punctuation.  
 - Intelligent cleanup of brackets, quotes, and punctuation when placeholders are empty.  
+- No custom database tables or capabilities; safe for hosted environments.  
 - Compatible with Moodle versions 4.0 through 4.5.
 
 ---
 
 ## Development Notes
-- Main files include `lib.php` and `settings.php`.  
-- Core functionality implemented in `local_alternatename_core_user_get_fullname()` which overrides the default fullname retrieval.  
+- Main files are `lib.php`, `db/upgrade.php`, `lang/*`, and `classes/privacy/provider.php`.  
+- Core functionality lives in `local_alternatename_core_user_get_fullname()` which overrides the default fullname retrieval.  
 - Advanced name rendering logic in `local_alternatename_render_from_template()` handles nested and partial placeholders gracefully.
 
 ---

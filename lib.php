@@ -147,7 +147,7 @@ function local_alternatename_get_template_placeholders(string $template, \stdCla
 /**
  * Normalises templates so that recognised placeholder tokens are wrapped in braces.
  *
- * Supports both {firstname} and bare tokens such as firstname or shorthand aliases (A-E).
+ * Supports both {firstname} and bare tokens such as firstname.
  *
  * @param string $template Raw template string.
  * @param \stdClass $user User record.
@@ -155,11 +155,10 @@ function local_alternatename_get_template_placeholders(string $template, \stdCla
  */
 function local_alternatename_normalise_template(string $template, \stdClass $user): string {
     $knownfields = local_alternatename_get_supported_fields($user);
-    $aliases = local_alternatename_get_alias_map();
 
     return preg_replace_callback(
         '/\{([a-zA-Z0-9_]+)\}|(?<!\{)\b([a-zA-Z][a-zA-Z0-9_]*)\b/u',
-        static function (array $matches) use ($knownfields, $aliases): string {
+        static function (array $matches) use ($knownfields): string {
             $token = '';
             if (!empty($matches[1])) {
                 $token = $matches[1];
@@ -169,7 +168,7 @@ function local_alternatename_normalise_template(string $template, \stdClass $use
             if ($token === '') {
                 return $matches[0];
             }
-            $resolved = local_alternatename_resolve_placeholder_token($token, $knownfields, $aliases);
+            $resolved = local_alternatename_resolve_placeholder_token($token, $knownfields);
             if ($resolved === null) {
                 return $matches[0];
             }
@@ -191,7 +190,9 @@ function local_alternatename_get_supported_fields(\stdClass $user): array {
         'alternatename',
         'alternatenameprefix',
         'fullname',
+        'firstname',
         'firstnamephonetic',
+        'lastname',
         'lastnamephonetic',
         'middlename',
         'middlenamephonetic',
@@ -220,6 +221,7 @@ function local_alternatename_get_supported_fields(\stdClass $user): array {
 function local_alternatename_render_from_template(string $template, \stdClass $user): string {
     $normalizedtemplate = local_alternatename_normalise_template($template, $user);
     $display = $normalizedtemplate;
+    $emptysentinel = local_alternatename_get_missing_alternatename_token();
 
     // Find all placeholders in the form {placeholder}.
     preg_match_all('/\{([a-zA-Z0-9_]+)\}/', $display, $matches, PREG_SET_ORDER);
@@ -232,28 +234,18 @@ function local_alternatename_render_from_template(string $template, \stdClass $u
         if ($value !== '') {
             // Replace placeholder with the value.
             $display = str_replace($placeholder, $value, $display);
+        } else if ($field === 'alternatename') {
+            // Mark missing alternatename to clean up trailing delimiters later.
+            $display = str_replace($placeholder, $emptysentinel, $display);
         } else {
             // Remove placeholder only (cleanup handles surrounding characters later).
             $display = str_replace($placeholder, '', $display);
         }
     }
 
-    return local_alternatename_cleanup_display($display);
-}
+    $display = local_alternatename_remove_missing_alternatename_artifacts($display);
 
-/**
- * Returns mapping of shorthand aliases to placeholder field names.
- *
- * @return array<string, string>
- */
-function local_alternatename_get_alias_map(): array {
-    return [
-        'A' => 'alternatename',
-        'B' => 'firstname',
-        'C' => 'lastname',
-        'D' => 'middlename',
-        'E' => 'alternatenameprefix',
-    ];
+    return local_alternatename_cleanup_display($display);
 }
 
 /**
@@ -261,17 +253,11 @@ function local_alternatename_get_alias_map(): array {
  *
  * @param string $token Raw token from template.
  * @param array<int, string> $knownfields Supported fields.
- * @param array<string, string> $aliases Alias map.
  * @return string|null Canonical placeholder name or null when unsupported.
  */
-function local_alternatename_resolve_placeholder_token(string $token, array $knownfields, array $aliases): ?string {
+function local_alternatename_resolve_placeholder_token(string $token, array $knownfields): ?string {
     if ($token === '') {
         return null;
-    }
-
-    $upper = strtoupper($token);
-    if (isset($aliases[$upper])) {
-        return $aliases[$upper];
     }
 
     foreach ($knownfields as $field) {
@@ -307,6 +293,87 @@ function local_alternatename_get_placeholder_value(\stdClass $user, string $fiel
             $value = $user->$fieldname ?? '';
             return trim((string)$value);
     }
+}
+
+/**
+ * Sentinel used to track removed alternatename placeholders.
+ *
+ * @return string
+ */
+function local_alternatename_get_missing_alternatename_token(): string {
+    return '__LOCAL_ALTERNATENAME_EMPTY__';
+}
+
+/**
+ * Removes brackets and punctuation left after an empty alternatename placeholder.
+ *
+ * @param string $display Rendered value with sentinel markers.
+ * @return string
+ */
+function local_alternatename_remove_missing_alternatename_artifacts(string $display): string {
+    $token = local_alternatename_get_missing_alternatename_token();
+    $tokenlength = strlen($token);
+
+    while (($position = strpos($display, $token)) !== false) {
+        $before = substr($display, 0, $position);
+        $after = substr($display, $position + $tokenlength);
+        $after = local_alternatename_trim_leading_alternatename_delimiters($after);
+        $display = $before . $after;
+    }
+
+    return $display;
+}
+
+/**
+ * Trims punctuation, whitespace, and wrapping brackets after a missing alternatename.
+ *
+ * @param string $text Text following the sentinel.
+ * @return string
+ */
+function local_alternatename_trim_leading_alternatename_delimiters(string $text): string {
+    $previous = null;
+    while ($text !== $previous) {
+        $previous = $text;
+        $text = ltrim($text);
+        $text = preg_replace('/^(?:[,.;:!?·•\/\#\\–—-]+\s*)+/u', '', $text);
+        $text = local_alternatename_unwrap_leading_pair($text);
+    }
+
+    return ltrim($text);
+}
+
+/**
+ * Unwraps a bracket/quote pair when it appears at the start of the string.
+ *
+ * @param string $text Input text.
+ * @return string
+ */
+function local_alternatename_unwrap_leading_pair(string $text): string {
+    if ($text === '') {
+        return $text;
+    }
+
+    $pairs = [
+        ['«', '»'],
+        ['"', '"'],
+        ["'", "'"],
+        ['(', ')'],
+        ['[', ']'],
+        ['{', '}'],
+    ];
+
+    foreach ($pairs as [$open, $close]) {
+        if (strncmp($text, $open, strlen($open)) === 0) {
+            $closeposition = strpos($text, $close, strlen($open));
+            if ($closeposition !== false) {
+                $inner = substr($text, strlen($open), $closeposition - strlen($open));
+                $rest = substr($text, $closeposition + strlen($close));
+                return $inner . $rest;
+            }
+        }
+    }
+
+    return $text;
 }
 
 /**

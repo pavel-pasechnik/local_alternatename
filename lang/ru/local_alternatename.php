@@ -23,9 +23,5 @@
  */
 
 $string['pluginname'] = 'Формат альтернативного имени';
-$string['settingspagetitle'] = 'Формат отображения имени';
-$string['setting_fullname_label'] = 'Шаблон полного имени';
-$string['setting_fullname_desc'] = 'Шаблон для отображения стандартного полного имени. Поддерживаются плейсхолдеры: {$a}.';
-$string['setting_alternative_label'] = 'Шаблон альтернативного полного имени';
-$string['setting_alternative_desc'] = 'Шаблон для альтернативного полного имени. Поддерживаются плейсхолдеры: {$a}.';
+$string['description'] = 'Переопределяет формирование полного имени в Moodle, чтобы можно было использовать шаблоны с {alternatename}, {firstname}, {lastname} и другими плейсхолдерами.';
 $string['privacy:metadata'] = 'Плагин «Формат альтернативного имени» не хранит персональные данные.';

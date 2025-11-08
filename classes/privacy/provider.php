@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - https://moodle.org/
+// This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -12,16 +12,31 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Language strings for the local_alternatename plugin.
+ * Privacy provider for local_alternatename.
  *
  * @package   local_alternatename
- * @copyright 2024 Pavel
+ * @category  privacy
+ * @copyright 2025 Pavel Pasechnik
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['pluginname'] = 'Alternative name format';
-$string['description'] = 'Overrides Moodle’s fullname generation so you can rely on template strings such as {alternatename}, {firstname}, {lastname}, etc.';
-$string['privacy:metadata'] = 'The Alternative name format plugin does not store any personal data.';
+namespace local_alternatename\privacy;
+
+use core_privacy\local\metadata\null_provider;
+
+/**
+ * Privacy provider declaring that no personal data is stored.
+ */
+class provider implements null_provider {
+    /**
+     * Returns the language string identifier used to explain the privacy status.
+     *
+     * @return string
+     */
+    public static function get_reason(): string {
+        return 'privacy:metadata';
+    }
+}
