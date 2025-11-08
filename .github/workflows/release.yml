@@ -41,12 +41,16 @@ jobs:
             echo "VERSION_NUMBER=$VERSION_NUMBER"
           } >> "$GITHUB_ENV"
 
-      - name: Update version numbers in version.php and install.xml
+      - name: Update version numbers in version.php and upgrade_plugins.php
         run: |
           echo "🔧 Updating version.php to version $VERSION_NUMBER ($RELEASE)"
 
           sed -i "s/\(\$plugin->version *= *\)[0-9]*/\1$VERSION_NUMBER/" version.php
           sed -i "s/\(\$plugin->release *= *'\)[^']*/\1$RELEASE/" version.php
+
+          echo "🔧 Syncing upgrade_plugins.php savepoint"
+          sed -i "s/\(\$oldversion < \)[0-9]*/\1$VERSION_NUMBER/" db/upgrade_plugins.php
+          sed -i "s/upgrade_plugin_savepoint(true, [0-9]*/upgrade_plugin_savepoint(true, $VERSION_NUMBER/" db/upgrade_plugins.php
 
       - name: Commit version bump
         env:
